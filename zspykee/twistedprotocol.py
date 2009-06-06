@@ -47,8 +47,19 @@ class SpykeeClient(protocol.Protocol):
                     curpos = curpos + nameLength + 1
                     self.docked = (ord(data[curpos]) == 0)
                     self.authenticated = True
+                    self.activateVideo()
+                    self.setSoundVolume(85)
                     print "I am authenticated to %r" % self.name
 
+    def activateVideo(self):
+        str = "PK\x0f\x00\x02\x01\x01"
+        self.transport.write(str)
+        str = "PK\x0f\x00\x02\x02\x01"
+        self.transport.write(str)
+
+    def setSoundVolume(self, volume):
+        str = "PK\x09\x00\x01%s" % chr(volume)
+        self.transport.write(str)
 
 class SpykeeClientFactory(protocol.ClientFactory):
 
@@ -66,6 +77,11 @@ class SpykeeServer(protocol.Protocol):
         print "We have a connection to our Spykee"
 
     def dataReceived(self, data):
+        commands = data.split('PK')
+        for c in commands:
+            self.commandReceived("PK%s" % c)
+
+    def commandReceived(self, data):
         if data[0:4] == "PK\x0a\x00":
             rest_length = data[4]
             username_length = ord(data[5])
@@ -78,6 +94,12 @@ class SpykeeServer(protocol.Protocol):
                 self.sendNames()
             else:
                 print "Username and password incorrect"
+        else:
+            if self.authenticated:
+                if data[0:7] == "PK\x0f\x00\x02\x01\x01":
+                    print "Video activated"
+                elif data[0:5] == "PK\x09\x00\x01":
+                    print "Sound volume set to %d" % ord(data[5])
 
     def sendNames(self):
         str = "PK\x0b...%s%s%s%s%s%s%s" % (chr(len(self.factory.name[0])),
