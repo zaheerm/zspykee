@@ -25,10 +25,8 @@ class SpykeeClient(protocol.Protocol):
             else:
                 if data[0:3] == "PK\x0b":
                     nameLength = ord(data[6])
-                    print "namelength: %d" % nameLength
                     if nameLength + 6 < len(data):
                         self.name.append(data[7:nameLength+7])
-			print "name0: %s" % self.name[0]
                     else:
                         self.transport.loseConnection()
                         return
