@@ -47,13 +47,30 @@ class SpykeeClient(protocol.Protocol):
                     curpos = curpos + nameLength + 1
                     self.docked = (ord(data[curpos]) == 0)
                     self.authenticated = True
-                    self.activateVideo()
                     self.setSoundVolume(85)
+                    self.activateVideo()
+                    self.activateSound()
                     print "I am authenticated to %r" % self.name
+        else:
+            if data[0:2] == "PK":
+                if data[2] == chr(1):
+                    print "Start of audio %d bytes" % (data[3] * 256 + data[4])
+                elif data[2] == chr(2):
+                    print "Start of video %d bytes" % (data[3] * 256 + data[4])
+                elif data[2] == chr(3):
+                    print "Battery: %d" % data[5]
+                elif data[2] == chr(16):
+                    if data[3] == chr(0) and data[4] == chr(1):
+                        if data[5] == 2:
+                            print "Docked"
+                        elif data[5] == 1:
+                            print "Undocked"
 
     def activateVideo(self):
         str = "PK\x0f\x00\x02\x01\x01"
         self.transport.write(str)
+
+    def activateSound(self):
         str = "PK\x0f\x00\x02\x02\x01"
         self.transport.write(str)
 
@@ -98,6 +115,8 @@ class SpykeeServer(protocol.Protocol):
             if self.authenticated:
                 if data[0:7] == "PK\x0f\x00\x02\x01\x01":
                     print "Video activated"
+                elif data[0:7] == "PK\x0f\x00\x02\x02\x01":
+                    print "Audio activated"
                 elif data[0:5] == "PK\x09\x00\x01":
                     print "Sound volume set to %d" % ord(data[5])
 
