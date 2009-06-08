@@ -6,6 +6,7 @@ class SpykeeClient(protocol.Protocol):
     authenticated = False
     name = []
     docked = False
+    buffer = ""
 
     def connectionMade(self):
         # PK<10><0><len(username)+len(password)+2><len(username)username
@@ -52,19 +53,31 @@ class SpykeeClient(protocol.Protocol):
                     self.activateSound()
                     print "I am authenticated to %r" % self.name
         else:
-            if data[0:2] == "PK":
-                if data[2] == chr(1):
-                    print "Start of audio %d bytes" % (data[3] * 256 + data[4])
-                elif data[2] == chr(2):
-                    print "Start of video %d bytes" % (data[3] * 256 + data[4])
-                elif data[2] == chr(3):
-                    print "Battery: %d" % data[5]
-                elif data[2] == chr(16):
-                    if data[3] == chr(0) and data[4] == chr(1):
-                        if data[5] == 2:
-                            print "Docked"
-                        elif data[5] == 1:
-                            print "Undocked"
+            if not self.buffer:
+                self.buffer = data
+            else:
+                self.buffer = "%s%s" % (self.buffer, data)
+            if self.buffer[0:2] == "PK":
+                if self.buffer[3] * 256 + self.buffer[4] > len(buffer) - 5:
+                    # have to wait until we have enough data
+                    pass
+                else:
+                    self.commandReceived()
+                    self.buffer = ""
+
+    def commandReceived(self):
+        if self.buffer[2] == chr(1):
+            self.audioSample()
+        elif self.buffer[2] == chr(2):
+            self.videoFrame()
+        elif self.buffer[2] == chr(3):
+            print "Battery: %d" % self.buffer[5]
+        elif self.buffer[2] == chr(16):
+            if self.buffer[3] == chr(0) and self.buffer[4] == chr(1):
+                if self.buffer[5] == 2:
+                    print "Docked"
+                elif self.buffer[5] == 1:
+                    print "Undocked"
 
     def activateVideo(self):
         str = "PK\x0f\x00\x02\x01\x01"
@@ -77,6 +90,12 @@ class SpykeeClient(protocol.Protocol):
     def setSoundVolume(self, volume):
         str = "PK\x09\x00\x01%s" % chr(volume)
         self.transport.write(str)
+
+    def audioSample(self):
+        print "Audio sample received"
+
+    def videoFrame(self):
+        print "Video frame received"
 
 class SpykeeClientFactory(protocol.ClientFactory):
 
