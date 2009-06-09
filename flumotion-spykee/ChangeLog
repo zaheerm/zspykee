@@ -1,0 +1,270 @@
+2008-12-29  Xavier Queralt Mateu  <xqueralt@flumotion.com>
+
+	* flumotion/test/Makefile.am:
+	Added the setup.py module to the distribution. An attempt to make the
+	tests work.
+
+2008-11-11  Jan Urbanski  <jurbanski@flumotion.com>
+
+	* configure.ac:
+	Unteach autoconf building the flumotion-trail script. We now have it
+	as-is in common/, and there is no need to build it.
+
+2008-10-13  Jan Urbanski  <jurbanski@flumotion.com>
+
+	* configure.ac:
+	Teach autoconf to build the flumotion-trail script.
+
+2008-07-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* flumotion/component/sample/sample.xml:
+	  Document properties and component/
+
+2008-06-02  Jordi Massaguer i Pla  <jordi@flumotion.com>
+
+	reviewed by: Johan Dahlin  <johan@flumotion.com>
+	
+	* flumotion/component/sample/admin_gtk.py:
+	Write the import as it is in the other files
+
+2008-06-02  Jordi Massaguer i Pla  <jordi@flumotion.com>
+
+	reviewed by: Johan Dahlin  <johan@flumotion.com>
+
+	* flumotion/component/sample/admin_gtk.py:
+	Added a missing gettext import.
+
+2008-05-27  Johan Dahlin  <johan@flumotion.com>
+
+	* flumotion/component/sample/admin_gtk.py:
+	Update to latest flumotion import changes
+
+2008-05-19  Johan Dahlin  <johan@gnome.org>
+
+	* flumotion/test/test_sample_admin_gtk.py:
+	Use the UITestCase class and update to the latest flumotion changes.
+
+2008-05-16  Johan Dahlin  <johan@gnome.org>
+
+	* flumotion/component/sample/admin_gtk.py: 
+	Update imports to match latest flumotion.
+
+2008-05-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* env:
+	* env.in:
+	  Generate env like in the core flumotion.
+
+2008-04-30  Johan Dahlin  <johan@gnome.org>
+
+	* flumotion/component/sample/admin_gtk.py:
+	Update to latest UI API changes.
+
+2007-11-13  Andy Wingo  <wingo@pobox.com>
+
+	* flumotion/test/test_sample_admin_gtk.py
+	(TestAdminModel.local_setVideoFlip): Update the test suite.
+
+	* flumotion/component/sample/sample.py (SampleMedium)
+	(SampleMedium.remote_setVideoFlip, Sample.componentMediumClass)
+	(SampleMedium.remote_setVideoFlip): Sigh, fix.
+
+	* flumotion/component/sample/admin_gtk.py
+	(FlipAdminGtkNode._cb_toggled): Refactor to use a custom remote
+	interface rather than setElementProperty, which will go away soon.
+	(FlipAdminGtkNode._cb_toggled): Whoops, fixed.
+
+2007-07-03  Andy Wingo  <wingo@pobox.com>
+
+	* flumotion/component/sample/admin_gtk.py (SampleAdminGtk.setup):
+	Refactor to, um, actually work.
+
+	* flumotion/component/sample/sample.py (Sample.init): The UIState
+	key is "method", not "pattern".
+
+	* flumotion/component/sample/sample.glade: Make the toplevel
+	window invisible.
+
+2007-06-13  Andy Wingo  <wingo@pobox.com>
+
+	* flumotion/component/sample/sample.py: 
+	* flumotion/component/sample/admin_gtk.py (FlipAdminGtkNode):
+	Update to use UI states instead of adminCallRemote. Fixes #511.
+
+	* flumotion/test/test_sample_admin_gtk.py: Fix up test to use
+	uiState things instead of propertyChange notifications.
+
+2007-05-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* conf/template.xml:
+	  update for 0.4 flumotion.
+	  Fixes #637.
+
+2007-05-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* conf/planet.xml:
+	  Bouncer got renamed.
+	* configure.ac:
+	  bump to 0.4.0.1, since we now want 0.4 flumotion
+
+2007-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* env:
+	  Change to make sure we run trial correctly.
+	* flumotion/component/sample/sample.py (SampleMedium.setup):
+	* flumotion/test/test_sample_admin_gtk.py:
+	  Small fixes to pass test.
+
+2007-02-08  Andy Wingo  <wingo@pobox.com>
+
+	* Makefile.am (EXTRA_DIST): 
+	* env: Add env script, to update for core changes.
+
+2006-11-29  Andy Wingo  <wingo@pobox.com>
+
+	* configure.ac: Don't check for things that flumotion already
+	checks for.
+
+2006-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* flumotion/test/test_sample_admin_gtk.py:
+	  remove more deferredResult()
+
+2006-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  require 0.2.0 flumotion
+	* flumotion/test/test_sample_admin_gtk.py:
+	  don't setup.setup() twice
+	  return a deferred from setUp; seems to work in 1.3 as well
+
+2006-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* flumotion/component/sample/admin_gtk.py:
+	* flumotion/component/sample/sample.py:
+	* flumotion/test/Makefile.am:
+	* flumotion/test/common.py:
+	* flumotion/test/test_sample_admin_gtk.py:
+	* flumotion/test/test_sample_common.py:
+	* misc/pycheckerrc:
+	* po/fr.po:
+	* po/nl.po:
+	  adding pychecker checking correctly
+	  add the necessary glue (common.py) to import setup.setup before
+	  running any test
+	  fix some errors reported by pychecker
+
+2006-04-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  do not check for GStreamer 0.8 or other deps, depending
+	  on flumotion should be enough.
+
+=== release 0.2.0 ===
+
+2006-03-06  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* NEWS:
+	* README:
+	* configure.ac:
+	  releasing 0.2.0
+
+2006-02-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	  use an m4/ dir so that autopoint puts its copied macros there
+	  instead of cluttering up common
+
+2006-01-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* flumotion/component/sample/sample.py:
+	* flumotion/component/sample/sample.xml:
+	  update for new component API
+
+2005-12-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* flumotion/test/test_sample_admin_gtk.py:
+	  after updating setup.m4, we got errors when trial
+	  was doing from twisted.internet import reactor
+	  in the cleanup phase.  importing it at the top
+	  works around it.
+
+2005-12-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/setup.m4:
+	  update to register ourselves last
+	  update to take a project name
+	* configure.ac:
+	  add project name to setup call
+
+2005-08-16  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  use FLUMOTION_SETUP and our spiffy setup.m4
+	* Makefile.am:
+	* flumotion/test/Makefile.am:
+	  clean FLUMOTION_SETUP files
+	* flumotion/test/test_sample_admin_gtk.py:
+	* flumotion/test/test_sample_common.py:
+	  use setup.setup()
+
+2005-08-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  update requirement for flumotion to 0.1.9.1 since we use
+	  translations and projects setup
+
+2005-07-31  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* common/common.mk:
+	  enable coverage again
+	* flumotion/component/sample/Makefile.am:
+	* flumotion/component/sample/common.py:
+	  put common methods to both ui and component here
+	* flumotion/component/sample/sample.py:
+	* flumotion/component/sample/admin_gtk.py:
+	* flumotion/component/sample/sample.xml:
+	  use common
+	* flumotion/test/Makefile.am:
+	* flumotion/test/test_sample_admin_gtk.py:
+	* flumotion/test/test_sample_common.py:
+	  add test for common
+
+2005-07-30  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* flumotion/component/sample/admin_gtk.py:
+	  reuse more of the base class's code
+
+2005-07-29  Michael Smith <msmith at fluendo.com>
+
+	* flumotion/component/sample/admin_gtk.py:
+	  Not finding the locale bundle is a non-fatal error, so that english
+	  works.
+
+2005-07-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* Makefile.am:
+	* autogen.sh:
+	* common/Makefile.am:
+	* common/common.mk:
+	* common/gen-locale-xml.py:
+	* common/locale.mk:
+	* configure.ac:
+	* flumotion/component/sample/admin_gtk.py:
+	* flumotion/component/sample/sample.glade:
+	* flumotion/project/Makefile.am:
+	* po/Makevars:
+	* po/POTFILES.in:
+	* po/fr.po:
+	* po/nl.po:
+	  add i18n
+
+2005-07-27  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* flumotion/component/sample/admin_gtk.py:
+	* flumotion/component/sample/sample.glade:
+	  add UI and glade
+	* flumotion/test/setup.py.in:
+	  make good use of os.path.abspath

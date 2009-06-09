@@ -1,0 +1,58 @@
+<registry>
+
+  <components>
+    <component type="spykee"
+               base="flumotion/component/spykee"
+               description="A producer component that can stream from Spykee.">
+      <source location="flumotion.component.spykee.spykee" />
+      <feeder name="default" />
+
+      <entries>
+        <entry type="component" location="spykee.py"
+               function="SpykeeProducer" />
+      </entries>
+
+      <properties>
+        <property name="hostname" type="string"
+                  description="Hostname or IP of Spykee robot" />
+        <property name="port" type="integer"
+                  description="Port number of Spykee robot" />
+        <property name="username" type="string"
+                  description="Username for login to Spykee robot" />
+        <property name="password" type="string"
+                  description="Password for login to Spykee robot" />
+      </properties>
+    </component>
+  </components>
+
+  <bundles>
+
+    <bundle project="spykee" name="spykee-base">
+        <dependencies>
+            <dependency name="component-base" />
+        </dependencies>
+
+        <directories>
+            <directory name="flumotion/component/spykee">
+                <filename location="__init__.py" />
+                <filename location="twistedprotocol.py" />
+            </directory>
+        </directories>
+    </bundle>
+
+    <bundle project="spykee" name="spykee-component">
+        <dependencies>
+            <dependency name="component" />
+            <dependency name="spykee-base" />
+        </dependencies>
+
+        <directories>
+            <directory name="flumotion/component/spykee">
+                <filename location="spykee.py" />
+            </directory>
+        </directories>
+    </bundle>
+
+  </bundles>
+
+</registry>

@@ -1,0 +1,36 @@
+<?xml version="1.0" ?>
+<planet>
+  <flow name="default">
+    <component name="video-source" type="videotest-producer" worker="localhost">
+      <!-- properties -->
+      <property name="format">video/x-raw-yuv</property>
+      <property name="framerate">50/10</property>
+      <property name="height">240</property>
+      <property name="pattern">0</property>
+      <property name="width">320</property>
+    </component>
+
+    <component name="video-flip" type="sample" worker="localhost">
+      <source>video-source</source>
+      <!-- properties -->
+    </component>
+
+    <component name="video-encoder" type="theora-encoder" worker="localhost">
+      <source>video-flip</source>
+      <!-- properties -->
+      <property name="bitrate">400</property>
+    </component>
+
+    <component name="muxer-video" type="ogg-muxer" worker="localhost">
+      <source>video-encoder</source>
+    </component>
+
+    <component name="http-video" type="http-streamer" worker="localhost">
+      <source>muxer-video</source>
+      <!-- properties -->
+      <property name="burst-on-connect">True</property>
+      <property name="mount-point">/</property>
+      <property name="port">8802</property>
+    </component>
+  </flow>
+</planet>

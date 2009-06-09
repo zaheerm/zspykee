@@ -1,0 +1,52 @@
+# -*- Mode: Python -*-
+# vi:si:et:sw=4:sts=4:ts=4
+#
+# Flumotion - a streaming media server
+# Copyright (C) 2004,2005 Fluendo, S.L. (www.fluendo.com). All rights reserved.
+
+# This file may be distributed and/or modified under the terms of
+# the GNU General Public License version 2 as published by
+# the Free Software Foundation.
+# This file is distributed without any warranty; without even the implied
+# warranty of merchantability or fitness for a particular purpose.
+# See "LICENSE.GPL" in the source distribution for more information.
+
+# Licensees having purchased or holding a valid Flumotion Advanced
+# Streaming Server license may use this file in accordance with the
+# Flumotion Advanced Streaming Server Commercial License Agreement.
+# See "LICENSE.Flumotion" in the source distribution for more information.
+
+# Headers in this file shall remain intact.
+
+import os
+import sys
+
+# make sure we find the original flumotion dir always and firstly
+# so we can bootstrap ourselves
+if not "@FLUMOTION_DIR@" in sys.path:
+    sys.path.insert(0, "@FLUMOTION_DIR@")
+
+from flumotion.common import log, setup
+
+# make logging work
+setup.setup()
+
+from flumotion.common import package
+#package.getPackager().registerPackagePath("@FLUMOTION_DIR@", "flumotion")
+
+# now register our flumotion dir as an additional one
+__thisdir = os.path.dirname(os.path.abspath(__file__))
+
+# in distcheck mode, we need to go up one more
+__packagePath = os.path.join(__thisdir, '..')
+if __thisdir.find('_build') != -1:
+    log.debug('setup: distcheck mode (in %s)' % __thisdir)
+    __packagePath = os.path.join(__thisdir, '..', '..')
+else:    
+    log.debug('setup: normal mode')
+
+log.debug('setup: registering package path %s' % __packagePath)
+package.getPackager().registerPackagePath(__packagePath, "template")
+
+# now setup the other package paths
+setup.setupPackagePath()

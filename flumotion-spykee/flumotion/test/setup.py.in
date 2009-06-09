@@ -1,0 +1,49 @@
+# -*- Mode: Python -*-
+# vi:si:et:sw=4:sts=4:ts=4
+#
+# Flumotion - a streaming media server
+# Copyright (C) 2004,2005 Fluendo, S.L. (www.fluendo.com). All rights reserved.
+# flumotion-ground-control - Advanced Administration
+
+# Licensees having purchased or holding a valid Flumotion Advanced
+# Streaming Server license may use this file in accordance with the
+# Flumotion Advanced Streaming Server Commercial License Agreement.
+# See "LICENSE.Flumotion" in the source distribution for more information.
+
+# Headers in this file shall remain intact.
+
+import os
+import sys
+
+# make sure we find the original flumotion dir always and firstly
+fludir = os.path.abspath("@FLUMOTION_DIR@")
+if not fludir in sys.path:
+    sys.path.insert(0, fludir)
+
+# make sure that if flumotion was already imported, this dir is in its __path__
+import flumotion
+if not fludir in flumotion.__path__:
+    flumotion.__path__.insert(0, os.path.join(fludir, 'flumotion'))
+
+# make logging work
+from flumotion.common import log
+log.init()
+
+# now register our flumotion dir as an additional one
+__thisdir = os.path.dirname(os.path.abspath(__file__))
+__packagePath = os.path.abspath(os.path.join(__thisdir, '..', '..'))
+
+# in distcheck mode, we need to go up one more
+if __thisdir.find('_build') != -1:
+    log.debug('setup: distcheck mode (in %s)' % __thisdir)
+    __packagePath = os.path.abspath(os.path.join(__thisdir, '..', '..'))
+else:    
+    log.debug('setup: normal mode')
+
+from flumotion.common import package
+log.debug('setup: registering package path %s' % __packagePath)
+package.getPackager().registerPackagePath(__packagePath, 'sample')
+
+from flumotion.common import setup as flusetup
+# now set up the rest of the packagepaths and the importer
+flusetup.setupPackagePath()

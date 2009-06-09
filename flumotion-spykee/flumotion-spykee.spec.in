@@ -1,0 +1,47 @@
+Name:           @PACKAGE@
+Version:        @VERSION@
+Release:        @RELEASE@
+Summary:        Flumotion Spykee.
+
+Group:          Applications/Internet
+License:	GPL
+URL:            http://www.fluendo.com/
+Source:         %{name}-%{version}.tar.bz2
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
+
+Requires:	flumotion > 0.1.6
+
+BuildRequires:	gettext
+BuildRequires:	python >= 2.3
+#BuildRequires:	epydoc
+BuildArch:	noarch
+
+%description
+Flumotion Spykee
+
+%prep
+%setup -q
+
+%build
+%configure
+
+make
+
+%install
+rm -rf $RPM_BUILD_ROOT
+
+%makeinstall
+
+%find_lang flumotion-spykee
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files -f flumotion-spykee.lang
+%defattr(-,root,root,-)
+%doc ChangeLog COPYING README AUTHORS LICENSE.Flumotion LICENSE.GPL
+%{_libdir}/flumotion
+
+%changelog
+* Wed Apr 20 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- first spec

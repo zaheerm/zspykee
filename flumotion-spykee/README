@@ -1,0 +1,51 @@
+This is a template for flumotion projects.
+
+This template serves as both a template to copy from when writing your own
+flumotion project, as well as an example of a functional Flumotion component.
+
+TESTING THE TEMPLATE
+--------------------
+The template project contains a component that allows you to flip a video
+stream left/right and up/down.  It can be run installed or uninstalled.
+
+If running uninstalled, you need to set the FLU_PROJECT_PATH environment
+variable to point to the directory that contains the template.  Do this for
+every program you start up.
+
+You can verify that you've done this correctly and the template is registered
+by running "flumotion-inspect sample".
+For example, if you're in the top-level directory of flumotion-template, run
+  FLU_PROJECT_PATH=`pwd` flumotion-inspect sample
+
+If this produces a lot of output about the component, Flumotion can correctly
+find the template project.
+
+After that, you can run (each from a separate terminal):
+FLU_PROJECT_PATH=`pwd` flumotion-manager -d 3 conf/planet.xml conf/template.xml
+
+flumotion-worker -d 3 -T tcp -u user -p test
+
+flumotion-admin -d 3
+  (Connect to running manager, don't use Secure connection, user/test)
+
+Now connect a client to port 8802, and use the video-flip's admin page to
+flip the video.  Bear in mind that due to http buffering, the change takes
+some time to take effect.
+
+SETTING UP A FLUMOTION PROJECT
+------------------------------
+- pick a project name wrt. to Flumotion; this should be a short name made of
+  letters, digits, and possibly (but please avoid) underscores
+  e.g. "template", "rtp", ...
+  For the rest of this document, we will pretend you chose "myproject".
+
+- all code should go under flumotion/ in the toplevel directory
+- flumotion/project/myproject.py.in should be created and generated from
+  configure.ac;
+  Flumotion will scan flumotion.project.* for project names
+
+WRITING A FLUMOTION COMPONENT
+-----------------------------
+- put your component in a directory under flumotion/component, preferably
+  respecting the directory layout Flumotion uses
+

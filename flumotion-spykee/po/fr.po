@@ -1,0 +1,32 @@
+# SOME DESCRIPTIVE TITLE.
+# This file is put in the public domain.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: flumotion-template VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-07-21 19:58+0200\n"
+"PO-Revision-Date: 2005-07-28 12:41+0200\n"
+"Last-Translator: Thomas Vander Stichele <EMAIL@ADDRESS>\n"
+"Language-Team: fr <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: flumotion/component/sample/sample.glade:8
+msgid "Sample"
+msgstr "Example"
+
+#: flumotion/component/sample/sample.glade:35
+#, fuzzy
+msgid "Flip h_orizontally"
+msgstr "Miroir h_orizontalement"
+
+#: flumotion/component/sample/sample.glade:59
+msgid "Flip _vertically"
+msgstr "Miroir v_erticalement"
+
+#: flumotion/component/sample/admin_gtk.py:90
+msgid "Flipping"
+msgstr ""
