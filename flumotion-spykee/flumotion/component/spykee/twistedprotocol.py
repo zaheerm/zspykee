@@ -1,9 +1,5 @@
 #!/usr/bin/python
 
-import gobject
-gobject.threads_init()
-import gst
-
 from twisted.internet import protocol, reactor
 
 class SpykeeClient(protocol.Protocol):
@@ -62,12 +58,12 @@ class SpykeeClient(protocol.Protocol):
                     curpos = curpos + nameLength
                     self.docked = (ord(data[curpos]) == 0)
                     self.authenticated = True
+                    self.factory.currentProtocol = self
                     print "I am authenticated to %r" % self.name
                     print "Docked: %d" % self.docked
                     if self.docked:
                         self.undock()
                     if not self.docked:
-                        self.initGst()
                         self.setSoundVolume(85)
                         self.activateVideo()
                         self.activateSound()
@@ -131,29 +127,25 @@ class SpykeeClient(protocol.Protocol):
         self.transport.write(str)
 
     def audioSample(self):
-        print "Audio sample received"
+        if self.factory.app:
+            length = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
+            self.factory.app.audioFrame(self.buffer[5:5+length])
 
     def videoFrame(self):
-        print "Video frame received"
-        if self.appsrc:
+        if self.factory.app:
             length = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
-            print "length: %d whole buffer length: %d" % (length, len(self.buffer))
-            buf = gst.Buffer(self.buffer[5:5+length])
-            self.appsrc.emit("push-buffer", buf)
+            self.factory.app.videoFrame(self.buffer[5:5+length])
 
-    def initGst(self):
-        self.pipeline = gst.parse_launch("appsrc do-timestamp=true name=src ! jpegdec ! xvimagesink sync=false")
-        self.appsrc = self.pipeline.get_by_name("src")
-        self.appsrc.props.caps = gst.caps_from_string("image/jpeg, width=320, height=240")
-        self.pipeline.set_state(gst.STATE_PLAYING)
 
 class SpykeeClientFactory(protocol.ClientFactory):
 
     protocol = SpykeeClient
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, app=None):
         self.username = username
         self.password = password
+        self.app = app
+        self.currentProtocol = None
 
 class SpykeeServer(protocol.Protocol):
 
@@ -201,15 +193,3 @@ class SpykeeServer(protocol.Protocol):
             self.factory.name[2], chr(len(self.factory.name[3])),
             self.factory.name[3], docked_str)
         self.transport.write(str)
-
-if __name__ == "__main__":
-    sf = protocol.Factory()
-    sf.protocol = SpykeeServer
-    sf.username = "user"
-    sf.password = "test"
-    sf.docked = True
-    sf.name = ["myname", "is", "spykee", "1.2.3"]
-    reactor.listenTCP(9000, sf)
-    cf = SpykeeClientFactory("user", "test")
-    reactor.connectTCP("localhost", 9000, cf)
-    reactor.run()

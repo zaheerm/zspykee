@@ -15,7 +15,7 @@
       <properties>
         <property name="hostname" type="string"
                   description="Hostname or IP of Spykee robot" />
-        <property name="port" type="integer"
+        <property name="port" type="int"
                   description="Port number of Spykee robot" />
         <property name="username" type="string"
                   description="Username for login to Spykee robot" />

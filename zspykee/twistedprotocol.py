@@ -64,8 +64,8 @@ class SpykeeClient(protocol.Protocol):
                     self.authenticated = True
                     print "I am authenticated to %r" % self.name
                     print "Docked: %d" % self.docked
-                    if self.docked:
-                        self.undock()
+                    #if self.docked:
+                    #    self.undock()
                     if not self.docked:
                         self.initGst()
                         self.setSoundVolume(85)

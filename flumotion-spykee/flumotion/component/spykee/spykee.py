@@ -17,35 +17,49 @@
 # See "LICENSE.Flumotion" in the source distribution for more information.
 
 # Headers in this file shall remain intact.
+import gst
 
 from flumotion.component import feedcomponent
 
-from flumotion.component.sample.common import getMethod
+from flumotion.component.spykee import twistedprotocol
 
+from twisted.internet import reactor
 
-class SampleMedium(feedcomponent.FeedComponentMedium):
-    def remote_setVideoFlip(self, method):
-        self.comp.set_element_property('videoflip', 'method', method)
-        
-# this is a sample converter component for video that will use videoflip
-# FIXME: check for videoflip plugin on worker
-class Sample(feedcomponent.ParseLaunchComponent):
-    componentMediumClass = SampleMedium
+class SpykeeMedium(feedcomponent.FeedComponentMedium):
+    def remote_dock(self):
+        self.comp.cf.currentProtocol.dock()
 
+class SpykeeProducer(feedcomponent.ParseLaunchComponent):
+    componentMediumClass = SpykeeMedium
+    logCategory = "spykee"
     def init(self):
         self.uiState.addKey('method', 0)
 
     def get_pipeline_string(self, properties):
-        return "ffmpegcolorspace ! videoflip name=videoflip ! ffmpegcolorspace"
+        return "appsrc do-timestamp=true name=src ! jpegdec ! videorate ! video/x-raw-yuv,framerate=25/1"
 
     def configure_pipeline(self, pipeline, properties):
-        def notify_method(obj, pspec):
-            self.uiState.set('method', int(obj.get_property('method')))
+        self._source = self.pipeline.get_by_name("src")
+        self._source.set_property('caps',
+            gst.caps_from_string("image/jpeg, width=320, height=240"))
+        self.debug("Configured pipeline")
 
-        hor = properties.get('horizontal', False)
-        ver = properties.get('vertical', False)
-        method = getMethod(hor, ver)
-        
-        source = self.get_element('videoflip')
-        source.connect('notify::method', notify_method)
-        source.set_property('method', method)
+    def check_properties(self, properties, addMessage):
+        self._port = properties.get("port", 9000)
+        self._hostname = properties.get("hostname", "localhost")
+        self._username = properties.get("username", "admin")
+        self._password = properties.get("password", "admin")
+        self.debug("set properties")
+
+    def do_setup(self):
+        self.cf = twistedprotocol.SpykeeClientFactory(self._username,
+            self._password, self)
+        reactor.connectTCP(self._hostname, self._port, self.cf)
+        self.debug("connecting to spykee robot at %s:%d with %s:%s", self._hostname, self._port, self._username, self._password)
+
+    def videoFrame(self, frame):
+        buf = gst.Buffer(frame)
+        self._source.emit("push-buffer", buf)
+
+    def audioFrame(self, frame):
+        pass
