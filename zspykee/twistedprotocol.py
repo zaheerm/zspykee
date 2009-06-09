@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+import gobject
+gobject.threads_init()
+import gst
+
 from twisted.internet import protocol, reactor
 
 class SpykeeClient(protocol.Protocol):
@@ -11,7 +15,7 @@ class SpykeeClient(protocol.Protocol):
     def connectionMade(self):
         # PK<10><0><len(username)+len(password)+2><len(username)username
         # len(password)password
-        str = "PK\x0a\x00%s%s%s%s%s" % (chr(len(self.factory.username) + 
+        str = "PK\x0a\x00%s%s%s%s%s" % (chr(len(self.factory.username) +
             len(self.factory.password) + 2), chr(len(self.factory.username)),
             self.factory.username, chr(len(self.factory.password)),
             self.factory.password)
@@ -58,24 +62,28 @@ class SpykeeClient(protocol.Protocol):
                     curpos = curpos + nameLength
                     self.docked = (ord(data[curpos]) == 0)
                     self.authenticated = True
+                    print "I am authenticated to %r" % self.name
+                    print "Docked: %d" % self.docked
+                    if self.docked:
+                        self.undock()
                     if not self.docked:
+                        self.initGst()
                         self.setSoundVolume(85)
                         self.activateVideo()
                         self.activateSound()
-                    print "I am authenticated to %r" % self.name
-                    print "Docked: %d" % self.docked
         else:
             if not self.buffer:
                 self.buffer = data
             else:
                 self.buffer = "%s%s" % (self.buffer, data)
             if self.buffer[0:2] == "PK":
-                if ord(self.buffer[3]) * 256 + ord(self.buffer[4]) > len(self.buffer) - 5:
+                length_needed = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
+                if length_needed > len(self.buffer) - 5:
                     # have to wait until we have enough data
                     pass
                 else:
                     self.commandReceived()
-                    self.buffer = ""
+                    self.buffer = self.buffer[length_needed+5:]
 
     def commandReceived(self):
         if self.buffer[2] == chr(1):
@@ -108,11 +116,36 @@ class SpykeeClient(protocol.Protocol):
         self.transport.write(str)
         self.docked = False
 
+    def dock(self):
+        str = "PK\x10\x00\x01\x06"
+	self.transport.write(str)
+        self.docked = True
+
+    def cancelDock(self):
+        str = "PK\x10\x00\x01\x07"
+        self.transport.write(str)
+        self.docked = False
+
+    def playSound(self, soundNumber):
+        str = "PK\x07\x00\x01%s" % chr(soundNumber)
+        self.transport.write(str)
+
     def audioSample(self):
         print "Audio sample received"
 
     def videoFrame(self):
         print "Video frame received"
+        if self.appsrc:
+            length = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
+            print "length: %d whole buffer length: %d" % (length, len(self.buffer))
+            buf = gst.Buffer(self.buffer[5:5+length])
+            self.appsrc.emit("push-buffer", buf)
+
+    def initGst(self):
+        self.pipeline = gst.parse_launch("appsrc do-timestamp=true name=src ! jpegdec ! xvimagesink sync=false")
+        self.appsrc = self.pipeline.get_by_name("src")
+        self.appsrc.props.caps = gst.caps_from_string("image/jpeg, width=320, height=240")
+        self.pipeline.set_state(gst.STATE_PLAYING)
 
 class SpykeeClientFactory(protocol.ClientFactory):
 
