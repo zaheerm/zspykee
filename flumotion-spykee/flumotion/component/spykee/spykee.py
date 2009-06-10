@@ -43,6 +43,12 @@ class SpykeeMedium(feedcomponent.FeedComponentMedium):
         if speed >=25 and speed <= 123:
             self.comp.cf.currentProtocol.motorBack(speed, time)
 
+    def remote_left(self):
+        self.comp.cf.currentProtocol.motorLeft()
+
+    def remote_right(self):
+        self.comp.cf.currentProtocol.motorRight()
+
 class SpykeeProducer(feedcomponent.ParseLaunchComponent):
     componentMediumClass = SpykeeMedium
     logCategory = "spykee"

@@ -143,6 +143,16 @@ class SpykeeClient(protocol.Protocol):
         self.transport.write(str)
         reactor.callLater(time, self.motorStop)
 
+    def motorLeft(self, time=0.2):
+        str = "PK\x05\x00\x02\x96\x64"
+        self.transport.write(str)
+        reactor.callLater(time, self.motorStop)
+
+    def motorRight(self, time=0.2):
+        str = "PK\x05\x00\x02\x64\x96"
+        self.transport.write(str)
+        reactor.callLater(time, self.motorStop)
+
     def audioSample(self):
         if self.factory.app:
             length = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
