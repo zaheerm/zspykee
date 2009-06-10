@@ -5,7 +5,8 @@
                base="flumotion/component/spykee"
                description="A producer component that can stream from Spykee.">
       <source location="flumotion.component.spykee.spykee" />
-      <feeder name="default" />
+      <feeder name="video" />
+      <feeder name="audio" />
 
       <entries>
         <entry type="component" location="spykee.py"

@@ -156,7 +156,7 @@ class SpykeeClient(protocol.Protocol):
     def audioSample(self):
         if self.factory.app:
             length = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
-            self.factory.app.audioFrame(self.buffer[5:5+length])
+            self.factory.app.audioSample(self.buffer[5:5+length])
 
     def videoFrame(self):
         if self.factory.app:

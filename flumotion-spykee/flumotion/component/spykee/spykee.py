@@ -57,12 +57,15 @@ class SpykeeProducer(feedcomponent.ParseLaunchComponent):
         self.uiState.addKey('battery-level', 0)
 
     def get_pipeline_string(self, properties):
-        return "appsrc do-timestamp=true name=src ! jpegdec ! videorate ! video/x-raw-yuv,framerate=25/1"
+        return "appsrc do-timestamp=true name=vsrc ! queue ! jpegdec ! videorate ! video/x-raw-yuv,framerate=25/1 ! @feeder:video@ appsrc do-timestamp=true name=asrc ! queue ! audiorate ! audio/x-raw-int,rate=16000,channels=1,width=16,depth=16 ! @feeder:audio@"
 
     def configure_pipeline(self, pipeline, properties):
-        self._source = self.pipeline.get_by_name("src")
-        self._source.set_property('caps',
+        self._vsource = self.pipeline.get_by_name("vsrc")
+        self._vsource.set_property('caps',
             gst.caps_from_string("image/jpeg, width=320, height=240"))
+        self._asource = self.pipeline.get_by_name("asrc")
+        self._asource.set_property('caps',
+            gst.caps_from_string("audio/x-raw-int,rate=16000,channels=1,width=16,depth=16,signed=true,endianness=1234"))
         self.debug("Configured pipeline")
 
     def check_properties(self, properties, addMessage):
@@ -80,10 +83,11 @@ class SpykeeProducer(feedcomponent.ParseLaunchComponent):
 
     def videoFrame(self, frame):
         buf = gst.Buffer(frame)
-        self._source.emit("push-buffer", buf)
+        self._vsource.emit("push-buffer", buf)
 
-    def audioFrame(self, frame):
-        pass
+    def audioSample(self, sample):
+        buf = gst.Buffer(sample)
+        self._asource.emit("push-buffer", buf)
 
     def batteryLevel(self, level):
         self.uiState.set("battery-level", level)
