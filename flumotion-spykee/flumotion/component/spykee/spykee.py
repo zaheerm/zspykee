@@ -29,11 +29,26 @@ class SpykeeMedium(feedcomponent.FeedComponentMedium):
     def remote_dock(self):
         self.comp.cf.currentProtocol.dock()
 
+    def remote_undock(self):
+        self.comp.cf.currentProtocol.undock()
+
+    def remote_playSound(self, soundNumber):
+        self.comp.cf.currentProtocol.playSound(soundNumber)
+
+    def remote_forward(self, speed, time):
+        if speed >= 25 and speed <= 123:
+            self.comp.cf.currentProtocol.motorForward(speed, time)
+
+    def remote_back(self, speed, time):
+        if speed >=25 and speed <= 123:
+            self.comp.cf.currentProtocol.motorBack(speed, time)
+
 class SpykeeProducer(feedcomponent.ParseLaunchComponent):
     componentMediumClass = SpykeeMedium
     logCategory = "spykee"
+
     def init(self):
-        self.uiState.addKey('method', 0)
+        self.uiState.addKey('battery-level', 0)
 
     def get_pipeline_string(self, properties):
         return "appsrc do-timestamp=true name=src ! jpegdec ! videorate ! video/x-raw-yuv,framerate=25/1"
@@ -63,3 +78,6 @@ class SpykeeProducer(feedcomponent.ParseLaunchComponent):
 
     def audioFrame(self, frame):
         pass
+
+    def batteryLevel(self, level):
+        self.uiState.set("battery-level", level)

@@ -87,7 +87,8 @@ class SpykeeClient(protocol.Protocol):
         elif self.buffer[2] == chr(2):
             self.videoFrame()
         elif self.buffer[2] == chr(3):
-            print "Battery: %d" % ord(self.buffer[5])
+            self.batteryLevel()
+            #print "Battery: %d" % ord(self.buffer[5])
         elif self.buffer[2] == chr(16):
             if self.buffer[3] == chr(0) and self.buffer[4] == chr(1):
                 if self.buffer[5] == 2:
@@ -126,6 +127,22 @@ class SpykeeClient(protocol.Protocol):
         str = "PK\x07\x00\x01%s" % chr(soundNumber)
         self.transport.write(str)
 
+    def motorStop(self):
+        str = "PK\x05\x00\x02\x00\x00"
+        self.transport.write(str)
+
+    def motorForward(self, motorSpeed, time=0.2):
+        str = "PK\x05\x00\x02%s%s" % (chr(125 - motorSpeed),
+            chr(125 - motorSpeed))
+        self.transport.write(str)
+        reactor.callLater(time, self.motorStop)
+
+    def motorBack(self, motorSpeed, time=0.2):
+        str = "PK\x05\x00\x02%s%s" % (chr(125 + motorSpeed),
+            chr(125 + motorSpeed))
+        self.transport.write(str)
+        reactor.callLater(time, self.motorStop)
+
     def audioSample(self):
         if self.factory.app:
             length = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
@@ -136,6 +153,10 @@ class SpykeeClient(protocol.Protocol):
             length = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
             self.factory.app.videoFrame(self.buffer[5:5+length])
 
+    def batteryLevel(self):
+        if self.factory.app:
+            level = ord(self.buffer[5])
+            self.factory.app.batteryLevel(level)
 
 class SpykeeClientFactory(protocol.ClientFactory):
 
