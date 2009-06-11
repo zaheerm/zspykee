@@ -48,7 +48,7 @@ class MotorAdminGtkNode(BaseAdminGtkNode):
         if name == "forward_button":
             self.callRemote("forward", 50, 0.2)
         elif name == "reverse_button":
-            self.callRemote("reverse", 50, 0.2)
+            self.callRemote("back", 50, 0.2)
         elif name == "left_button":
             self.callRemote("left")
         elif name == "right_button":
