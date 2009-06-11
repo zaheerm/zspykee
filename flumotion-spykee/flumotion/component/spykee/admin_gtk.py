@@ -35,7 +35,7 @@ class MotorAdminGtkNode(BaseAdminGtkNode):
         self._buttons["reverse"] = self.getWidget('reverse_button')
         self._buttons["left"] = self.getWidget('left_button')
         self._buttons["right"] = self.getWidget('right_button')
-        self._dock = self.getWidget('dock_button')
+        self._buttons["dock"] = self.getWidget('dock_button')
 
         for b in self._buttons:
             self._buttons[b].connect("clicked", self.button_clicked)
