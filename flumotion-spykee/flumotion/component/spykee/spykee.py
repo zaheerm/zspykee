@@ -44,6 +44,9 @@ class SpykeeMedium(feedcomponent.FeedComponentMedium):
     def remote_right(self):
         self.comp.cf.currentProtocol.motorRight()
 
+    def remote_light(self, led, on):
+        self.comp.cf.currentProtocol.light(led, on)
+
 class SpykeeProducer(feedcomponent.ParseLaunchComponent):
     componentMediumClass = SpykeeMedium
     logCategory = "spykee"

@@ -28,6 +28,7 @@ class MotorAdminGtkNode(BaseAdminGtkNode):
     gettextDomain = "flumotion-template"
 
     _buttons = {}
+    _toggles = {}
     uiStateHandlers = None
 
     def haveWidgetTree(self):
@@ -36,9 +37,16 @@ class MotorAdminGtkNode(BaseAdminGtkNode):
         self._buttons["left"] = self.getWidget('left_button')
         self._buttons["right"] = self.getWidget('right_button')
         self._buttons["dock"] = self.getWidget('dock_button')
-
+        
         for b in self._buttons:
             self._buttons[b].connect("clicked", self.button_clicked)
+
+        self._toggles["headlight"] = self.getWidget("headlight_tb")
+        self._toggles["leftarm"] = self.getWidget("leftarm_tb")
+        self._toggles["rightarm"] = self.getWidget("rightarm_tb")
+
+        for t in self._toggles:
+            self._toggles[t].connect("toggled", self.button_toggled)
 
         # necessary to set self.widget
         self.widget = self.getWidget('table1')
@@ -55,6 +63,16 @@ class MotorAdminGtkNode(BaseAdminGtkNode):
             self.callRemote("right")
         elif name == "dock_button":
             self.callRemote("dock")
+
+    def button_toggled(self, button):
+        name = button.get_name()
+        toggled = button.get_active()
+        led = 0
+        if name == "leftarm_tb":
+            led = 2
+        elif name == "rightarm_tb":
+            led = 1
+        self.callRemote("light", led, toggled)
 
     def stateSet(self, state, key, value):
         handler = self.uiStateHandlers.get(key, None)
