@@ -11,6 +11,8 @@
       <entries>
         <entry type="component" location="spykee.py"
                function="SpykeeProducer" />
+        <entry type="admin/gtk" location="admin_gtk.py"
+	       function="SpykeeAdminGtk" />
       </entries>
 
       <properties>
@@ -53,7 +55,19 @@
             </directory>
         </directories>
     </bundle>
+    <bundle project="spykee" name="spykee-admin-gtk">
+        <dependencies>
+            <dependency name="spykee-base" />
+            <dependency name="base-admin-gtk" />
+        </dependencies>
 
+        <directories>
+            <directory name="flumotion/component/spykee">
+                <filename location="admin_gtk.py" />
+                <filename location="spykee.glade" />
+            </directory>
+        </directories>
+    </bundle>
   </bundles>
 
 </registry>

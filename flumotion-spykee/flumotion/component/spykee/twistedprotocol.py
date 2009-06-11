@@ -128,7 +128,7 @@ class SpykeeClient(protocol.Protocol):
 
     def dock(self):
         str = "PK\x10\x00\x01\x06"
-	self.transport.write(str)
+        self.transport.write(str)
         self.docked = True
 
     def cancelDock(self):
