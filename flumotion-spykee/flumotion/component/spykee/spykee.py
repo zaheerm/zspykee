@@ -14,11 +14,15 @@
 # Headers in this file shall remain intact.
 import gst
 
+from flumotion.common.i18n import N_, gettexter
+from flumotion.common.planet import moods
 from flumotion.component import feedcomponent
 
 from flumotion.component.spykee import twistedprotocol
 
 from twisted.internet import reactor
+
+T_ = gettexter()
 
 class SpykeeMedium(feedcomponent.FeedComponentMedium):
     def remote_dock(self):
@@ -89,3 +93,16 @@ class SpykeeProducer(feedcomponent.ParseLaunchComponent):
 
     def batteryLevel(self, level):
         self.uiState.set("battery-level", level)
+
+    def connectionLost(self, reason):
+        m = messages.Error(T_(N_(
+            "Connection to spykee lost: reason %r" % reason)), mid="lostconn")
+        self.addMessage(m)
+        self.setMood(moods.sad)
+
+    def connectionFailed(self, reason):
+        m = messages.Error(T_(N_(
+            "Connection to spykee failed: reason %r" % reason)), 
+            mid="failedconn")
+        self.addMessage(m)
+        self.setMood(moods.sad)

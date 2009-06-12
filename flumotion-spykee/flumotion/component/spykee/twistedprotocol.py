@@ -199,6 +199,12 @@ class SpykeeClientFactory(protocol.ClientFactory):
         self.app = app
         self.currentProtocol = None
 
+    def clientConnectionLost(self, connector, reason):
+        self.app.connectionLost(reason)
+
+    def clientConnectionFailed(self, connector, reason):
+        self.app.connectionFailed(reason)
+
 class SpykeeServer(protocol.Protocol):
 
     authenticated = False
