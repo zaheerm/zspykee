@@ -189,6 +189,15 @@ class SpykeeClient(protocol.Protocol):
             level = ord(self.buffer[5])
             self.factory.app.batteryLevel(level)
 
+    def audioToSpykeeOn(self):
+        self.sendCommand(15, "\x03\x01")
+
+    def audioToSpykeeOff(self):
+        self.sendCommand(15, "\x03\x00")
+
+    def audioToSpykeeSample(self, sample):
+        self.sendCommand(1, sample)
+
 class SpykeeClientFactory(protocol.ClientFactory):
 
     protocol = SpykeeClient
