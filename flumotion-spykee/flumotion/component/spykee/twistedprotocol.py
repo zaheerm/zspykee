@@ -109,69 +109,70 @@ class SpykeeClient(protocol.Protocol):
                 elif self.buffer[5] == 1:
                     print "Undocked"
 
-    def activateVideo(self):
-        str = "PK\x0f\x00\x02\x01\x01"
+    def sendCommand(self, command, data):
+        lenstr = ""
+        if len(data) <= 255:
+            lenstr = "\x00%s" % chr(len(data))
+        else:
+            multiple = int(len(data) / 256)
+            lenstr = "%s%s" % (multiple, len(data) % 256)
+        str = "PK%s%s%s" % (chr(command), lenstr, data)
         self.transport.write(str)
+
+    def activateVideo(self):
+        self.sendCommand(15, "\x01\x01")
 
     def activateSound(self):
-        str = "PK\x0f\x00\x02\x02\x01"
-        self.transport.write(str)
+        self.sendCommand(15, "\x02\x01")
 
     def setSoundVolume(self, volume):
-        str = "PK\x09\x00\x01%s" % chr(volume)
-        self.transport.write(str)
+        if volume >= 0 and volume < 256:
+            self.sendCommand(9, chr(volume))
 
     def undock(self):
-        str = "PK\x10\x00\x01\x05"
-        self.transport.write(str)
+        self.sendCommand(16, "\x05")
         self.docked = False
 
     def dock(self):
-        str = "PK\x10\x00\x01\x06"
-        self.transport.write(str)
+        self.sendCommand(16, "\x06")
         self.docked = True
 
     def cancelDock(self):
-        str = "PK\x10\x00\x01\x07"
-        self.transport.write(str)
+        self.sendCommand(16, "\x07")
         self.docked = False
 
     def playSound(self, soundNumber):
-        str = "PK\x07\x00\x01%s" % chr(soundNumber)
-        self.transport.write(str)
+        if soundNumber >= 0 and soundNumber < 256:
+            self.sendCommand(7, chr(soundNumber))
 
     def motorStop(self):
-        str = "PK\x05\x00\x02\x00\x00"
-        self.transport.write(str)
+        self.sendCommand(5, "\x00\x00")
 
     def motorForward(self, motorSpeed, time=0.2):
-        str = "PK\x05\x00\x02%s%s" % (chr(125 - motorSpeed),
-            chr(125 - motorSpeed))
-        self.transport.write(str)
-        reactor.callLater(time, self.motorStop)
+        if motorSpeed < 125 and motorSpeed >= 0:
+            self.sendCommand(5, "%s%s" % (chr(125 - motorSpeed),
+                chr(125 - motorSpeed)))
+            reactor.callLater(time, self.motorStop)
 
     def motorBack(self, motorSpeed, time=0.2):
-        str = "PK\x05\x00\x02%s%s" % (chr(125 + motorSpeed),
-            chr(125 + motorSpeed))
-        self.transport.write(str)
-        reactor.callLater(time, self.motorStop)
+        if motorSpeed < 125 and motorSpeed >= 0:
+            self.sendCommand(5, "%s%s" % (chr(125 + motorSpeed),
+                chr(125 + motorSpeed)))
+            reactor.callLater(time, self.motorStop)
 
     def motorLeft(self, time=0.2):
-        str = "PK\x05\x00\x02\x96\x64"
-        self.transport.write(str)
+        self.sendCommand(5, "\x96\x64")
         reactor.callLater(time, self.motorStop)
 
     def motorRight(self, time=0.2):
-        str = "PK\x05\x00\x02\x64\x96"
-        self.transport.write(str)
+        self.sendCommand(5, "\x64\x96")
         reactor.callLater(time, self.motorStop)
 
     def light(self, led, on=True):
         onstr = "\x00"
         if on:
             onstr="\x01"
-        str = "PK\x04\x00\x02%s%s" % (chr(led), onstr)
-        self.transport.write(str)
+        self.sendCommand(4, "%s%s" % (chr(led), onstr))
 
     def audioSample(self):
         if self.factory.app:
