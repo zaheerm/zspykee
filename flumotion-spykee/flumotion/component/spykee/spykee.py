@@ -106,3 +106,11 @@ class SpykeeProducer(feedcomponent.ParseLaunchComponent):
             mid="failedconn")
         self.addMessage(m)
         self.setMood(moods.sad)
+
+    def isDocked(self, docked):
+        if docked:
+            self.cf.currentProtocol.undock()
+        self.cf.currentProtocol.setSoundVolume(85)
+        self.cf.currentProtocol.activateVideo()
+        self.cf.currentProtocol.activateSound()
+

@@ -72,14 +72,8 @@ class SpykeeClient(protocol.Protocol):
                     self.docked = (ord(data[curpos]) == 0)
                     self.authenticated = True
                     self.factory.currentProtocol = self
-                    print "I am authenticated to %r" % self.name
-                    print "Docked: %d" % self.docked
-                    if self.docked:
-                        self.undock()
-                    if not self.docked:
-                        self.setSoundVolume(85)
-                        self.activateVideo()
-                        self.activateSound()
+                    if self.factory.app:
+                        self.factory.app.isDocked(self.docked)
         else:
             if not self.buffer:
                 self.buffer = data
