@@ -21,6 +21,9 @@ class SpykeeClient(protocol.Protocol):
     name = []
     docked = False
     buffer = ""
+    settings = {}
+    wifi = []
+    log = ""
 
     def connectionMade(self):
         # PK<10><0><len(username)+len(password)+2><len(username)username
@@ -96,13 +99,20 @@ class SpykeeClient(protocol.Protocol):
             self.videoFrame()
         elif self.buffer[2] == chr(3):
             self.batteryLevel()
-            #print "Battery: %d" % ord(self.buffer[5])
         elif self.buffer[2] == chr(16):
             if self.buffer[3] == chr(0) and self.buffer[4] == chr(1):
                 if self.buffer[5] == 2:
                     print "Docked"
                 elif self.buffer[5] == 1:
                     print "Undocked"
+        elif self.buffer[2] == chr(0x0d):
+            self.settingsReceived()
+        elif self.buffer[2] == chr(0x11):
+            self.logReceived()
+        elif self.buffer[2] == chr(0x0e):
+            self.visibleWifiReceived()
+        else:
+            print "Unknown command %d" % ord(self.buffer[2])
 
     def sendCommand(self, command, data):
         lenstr = ""
@@ -113,6 +123,13 @@ class SpykeeClient(protocol.Protocol):
             lenstr = "%s%s" % (multiple, len(data) % 256)
         str = "PK%s%s%s" % (chr(command), lenstr, data)
         self.transport.write(str)
+
+    def getCurrentCommandLength(self):
+        if len(self.buffer) > 5:
+            length = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
+            return length
+        else:
+            return 0
 
     def activateVideo(self):
         self.sendCommand(15, "\x01\x01")
@@ -169,18 +186,44 @@ class SpykeeClient(protocol.Protocol):
 
     def audioSample(self):
         if self.factory.app:
-            length = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
+            length = self.getCurrentCommandLength()
             self.factory.app.audioSample(self.buffer[5:5+length])
 
     def videoFrame(self):
         if self.factory.app:
-            length = ord(self.buffer[3]) * 256 + ord(self.buffer[4])
+            length = self.getCurrentCommandLength()
             self.factory.app.videoFrame(self.buffer[5:5+length])
 
     def batteryLevel(self):
         if self.factory.app:
             level = ord(self.buffer[5])
             self.factory.app.batteryLevel(level)
+        else:
+            print "Battery level: %d" % ord(self.buffer[5])
+
+    def settingsReceived(self):
+        length = self.getCurrentCommandLength()
+        settingsStr = self.buffer[5:5+length]
+        import string
+        keyvalues = string.split(settingsStr, '&')
+        for kv in keyvalues:
+            key, value = string.split(kv, '=')
+            self.settings[key] = value
+
+    def logReceived(self):
+        length = self.getCurrentCommandLength()
+        self.log = self.buffer[5:5+length]
+        print self.log
+
+    def visibleWifiReceived(self):
+        length = self.getCurrentCommandLength()
+        wifi = self.buffer[5:5+length]
+        import string
+        networks = string.split(wifi, ';')
+        for n in networks:
+            essid, encryption, strength = string.split(n, ":")
+            self.wifi.append((essid, encryption, int(strength)))
+        print repr(self.wifi)
 
     def audioToSpykeeOn(self):
         self.sendCommand(15, "\x03\x01")
@@ -190,6 +233,19 @@ class SpykeeClient(protocol.Protocol):
 
     def audioToSpykeeSample(self, sample):
         self.sendCommand(1, sample)
+
+    def getSettings(self):
+        self.sendCommand(0xd, "")
+
+    def getLog(self):
+        self.sendCommand(0x11, "")
+
+    def getVisibleWifi(self):
+        self.sendCommand(0xe, "")
+
+    def applySettings(self):
+        settingsStr = ""
+        self.sendCommand(0xd, settingsStr)
 
 class SpykeeClientFactory(protocol.ClientFactory):
 
@@ -202,10 +258,18 @@ class SpykeeClientFactory(protocol.ClientFactory):
         self.currentProtocol = None
 
     def clientConnectionLost(self, connector, reason):
-        self.app.connectionLost(reason)
+        if self.app:
+            self.app.connectionLost(reason)
+        else:
+            print "Connection lost because of %r" % (reason,)
+            reactor.stop()
 
     def clientConnectionFailed(self, connector, reason):
-        self.app.connectionFailed(reason)
+        if self.app:
+            self.app.connectionFailed(reason)
+        else:
+            print "Connection failed because of %r" % (reason,)
+            reactor.stop()
 
 class SpykeeDiscoveryProtocol(protocol.DatagramProtocol):
 
@@ -247,14 +311,14 @@ class SpykeeDiscoveryProtocol(protocol.DatagramProtocol):
                     if spykee_id[1] not in self.spykees:
                         self.spykees[spykee_id[1]] = addr[0]
 
-def discover():
+def discover(wait=10):
     returnd = defer.Deferred()
     discover_protocol = SpykeeDiscoveryProtocol()
     listener = reactor.listenUDP(9000, discover_protocol)
     def stopDiscovery():
         listener.stopListening()
         returnd.callback(discover_protocol.spykees)
-    reactor.callLater(10, stopDiscovery)
+    reactor.callLater(wait, stopDiscovery)
     return returnd
 
 class SpykeeServer(protocol.Protocol):
@@ -311,6 +375,36 @@ if __name__ == "__main__":
         for name in spykees:
             print "Spykee %s discovered at IP %s" % (name, spykees[name])
         reactor.stop()
-    d = discover()
+    d = discover(2)
     d.addCallback(discovered)
     reactor.run()
+    class a:
+        cf = None
+        def isDocked(self, docked):
+            print "docked:%d" % docked
+            self.cf.currentProtocol.getSettings()
+            self.cf.currentProtocol.getLog()
+            self.cf.currentProtocol.getVisibleWifi()
+            self.cf.currentProtocol.activateVideo()
+            self.cf.currentProtocol.activateSound()
+
+        def videoFrame(self, frame):
+            print "video frame"
+
+        def audioSample(self, sample):
+            print "audio sample"
+
+        def connectionLost(self, reason):
+            print "connection lost"
+
+        def connectionFailed(self, reason):
+            print "connection failed"
+
+        def batteryLevel(self, level):
+            print "battery level: %d" % level
+    ao = a()
+    cf = SpykeeClientFactory("admin", "admin", ao)
+    ao.cf = cf
+    reactor.connectTCP("172.17.6.1", 9000, cf)
+    reactor.run()
+
