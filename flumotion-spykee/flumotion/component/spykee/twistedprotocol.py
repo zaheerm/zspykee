@@ -12,8 +12,9 @@
 # See "LICENSE.GPL" in the source distribution for more information.
 
 # Headers in this file shall remain intact.
+from socket import SOL_SOCKET, SO_BROADCAST
 
-from twisted.internet import protocol, reactor
+from twisted.internet import protocol, reactor, task, defer
 
 class SpykeeClient(protocol.Protocol):
     authenticated = False
@@ -206,6 +207,56 @@ class SpykeeClientFactory(protocol.ClientFactory):
     def clientConnectionFailed(self, connector, reason):
         self.app.connectionFailed(reason)
 
+class SpykeeDiscoveryProtocol(protocol.DatagramProtocol):
+
+    port = 9000
+    bcastaddresses = []
+    spykees = {}
+
+    def startProtocol(self):
+        import netifaces
+        self.interfaces = netifaces.interfaces()
+        for i in self.interfaces:
+            addresses = netifaces.ifaddresses(i)
+            for item in addresses:
+                a = addresses[item]
+                for eacha in a:
+                    if "broadcast" in eacha:
+                        # crude way to remove ipv6 bcast addresses
+                        import string
+                        if string.upper(eacha["broadcast"]) == \
+                           eacha["broadcast"]:
+                            self.bcastaddresses.append(eacha["broadcast"])
+        self.transport.socket.setsockopt(SOL_SOCKET, SO_BROADCAST, True)
+        self.call = task.LoopingCall(self.discover)
+        self.dcall = self.call.start(1.0)
+
+    def stopProtocol(self):
+        self.call.stop()
+
+    def discover(self):
+        for i in self.bcastaddresses:
+            self.transport.write("DSCV\01", (i, self.port))
+
+    def datagramReceived(self, data, addr):
+        if len(data) > 5: # length 5 means we receive our own bcast
+            if data[0:4] == "DSCV":
+                import string
+                spykee_id = string.split(data[6:],"=")
+                if spykee_id[0] == "uid":
+                    if spykee_id[1] not in self.spykees:
+                        self.spykees[spykee_id[1]] = addr[0]
+
+def discover():
+    returnd = defer.Deferred()
+    discover_protocol = SpykeeDiscoveryProtocol()
+    listener = reactor.listenUDP(9000, discover_protocol)
+    def stopDiscovery():
+        listener.stopListening()
+        returnd.callback(discover_protocol.spykees)
+    reactor.callLater(10, stopDiscovery)
+    return returnd
+
 class SpykeeServer(protocol.Protocol):
 
     authenticated = False
@@ -252,3 +303,14 @@ class SpykeeServer(protocol.Protocol):
             self.factory.name[2], chr(len(self.factory.name[3])),
             self.factory.name[3], docked_str)
         self.transport.write(str)
+
+if __name__ == "__main__":
+    def discovered(spykees):
+        if not spykees:
+            print "You poor thing, you need to buy yourself a Spykee at http://www.redstore.com/MECIMG001"
+        for name in spykees:
+            print "Spykee %s discovered at IP %s" % (name, spykees[name])
+        reactor.stop()
+    d = discover()
+    d.addCallback(discovered)
+    reactor.run()
