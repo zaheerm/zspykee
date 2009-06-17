@@ -31,15 +31,18 @@ class SpykeeMedium(feedcomponent.FeedComponentMedium):
     def remote_undock(self):
         self.comp.cf.currentProtocol.undock()
 
+    def remote_canceldock(self):
+        self.comp.cf.currentProtocol.cancelDock()
+
     def remote_playSound(self, soundNumber):
         self.comp.cf.currentProtocol.playSound(soundNumber)
 
     def remote_forward(self, speed, time):
-        if speed >= 25 and speed <= 123:
+        if speed >= 0 and speed < 128:
             self.comp.cf.currentProtocol.motorForward(speed, time)
 
     def remote_back(self, speed, time):
-        if speed >=25 and speed <= 123:
+        if speed >= 0 and speed < 128:
             self.comp.cf.currentProtocol.motorBack(speed, time)
 
     def remote_left(self):
@@ -47,6 +50,9 @@ class SpykeeMedium(feedcomponent.FeedComponentMedium):
 
     def remote_right(self):
         self.comp.cf.currentProtocol.motorRight()
+
+    def remote_motor(self, leftMotor, rightMotor, time):
+        self.comp.cf.currentProtocol.motorCommand(leftMotor, rightMotor, time)
 
     def remote_light(self, led, on):
         self.comp.cf.currentProtocol.light(led, on)

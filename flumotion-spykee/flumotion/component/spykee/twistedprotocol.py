@@ -143,23 +143,21 @@ class SpykeeClient(protocol.Protocol):
         self.sendCommand(5, "\x00\x00")
 
     def motorForward(self, motorSpeed, time=0.2):
-        if motorSpeed < 125 and motorSpeed >= 0:
-            self.sendCommand(5, "%s%s" % (chr(125 - motorSpeed),
-                chr(125 - motorSpeed)))
-            reactor.callLater(time, self.motorStop)
+        if motorSpeed < 128 and motorSpeed >= 0:
+            self.motorCommand(motorSpeed, motorSpeed, time)
 
     def motorBack(self, motorSpeed, time=0.2):
-        if motorSpeed < 125 and motorSpeed >= 0:
-            self.sendCommand(5, "%s%s" % (chr(125 + motorSpeed),
-                chr(125 + motorSpeed)))
-            reactor.callLater(time, self.motorStop)
+        if motorSpeed < 128 and motorSpeed >= 0:
+            self.motorCommand(-motorSpeed, -motorSpeed, time)
 
     def motorLeft(self, time=0.2):
-        self.sendCommand(5, "\x96\x64")
-        reactor.callLater(time, self.motorStop)
+        self.motorCommand(0x96, 0x64, time)
 
     def motorRight(self, time=0.2):
-        self.sendCommand(5, "\x64\x96")
+        self.motorCommand(0x64, 0x96, time)
+
+    def motorCommand(self, leftMotor, rightMotor, time=0.2):
+        self.sendCommand(5, "%s%s" % (chr(leftMotor), chr(rightMotor)))
         reactor.callLater(time, self.motorStop)
 
     def light(self, led, on=True):
