@@ -1,7 +1,7 @@
 <registry>
 
   <components>
-    <component type="spykee"
+    <component type="spykee-producer"
                base="flumotion/component/spykee"
                description="A producer component that can stream from Spykee.">
       <source location="flumotion.component.spykee.spykee" />
@@ -13,7 +13,14 @@
                function="SpykeeProducer" />
         <entry type="admin/gtk" location="admin_gtk.py"
 	       function="SpykeeAdminGtk" />
+	<entry type="wizard" location="wizard_gtk.py"
+	       function="SpykeeWizardPlugin" />
       </entries>
+
+      <wizard type="audio-producer" _description="Spykee audio"
+              feeder="audio" />
+      <wizard type="video-producer" _description="Spykee video"
+              feeder="video" />
 
       <properties>
         <property name="hostname" type="string"
@@ -68,6 +75,31 @@
             </directory>
         </directories>
     </bundle>
+    <bundle project="spykee" name="spykee-wizard">
+        <dependencies>
+            <dependency name="spykee-base" />
+            <dependency name="component" />
+        </dependencies>
+
+        <directories>
+            <directory name="flumotion/component/spykee">
+                <filename location="wizard.glade" />
+                <filename location="wizard_gtk.py" />
+            </directory>
+        </directories>
+    </bundle>
+    <bundle project="spykee" name="spykee-checks">
+        <dependencies>
+            <dependency name="spykee-component" />
+            <dependency name="worker-checks" />
+        </dependencies>
+        <directories>
+            <directory name="flumotion/component/spykee">
+                 <filename location="spykeechecks.py" />
+            </directory>
+        </directories>
+    </bundle>
+
   </bundles>
 
 </registry>

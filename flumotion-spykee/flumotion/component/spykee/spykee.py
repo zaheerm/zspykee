@@ -59,7 +59,7 @@ class SpykeeMedium(feedcomponent.FeedComponentMedium):
 
 class SpykeeProducer(feedcomponent.ParseLaunchComponent):
     componentMediumClass = SpykeeMedium
-    logCategory = "spykee"
+    logCategory = "spykee-producer"
 
     def init(self):
         self.uiState.addKey('battery-level', 0)
