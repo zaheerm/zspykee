@@ -245,6 +245,10 @@ class SpykeeClient(protocol.Protocol):
 
     def applySettings(self):
         settingsStr = ""
+        for setting in self.settings:
+            settingsStr += "%s=%s&" % (setting, self.settings[setting])
+        if settingsStr.endswith("&"):
+            settingsStr = settingsStr[:-1]
         self.sendCommand(0xd, settingsStr)
 
 class SpykeeClientFactory(protocol.ClientFactory):
