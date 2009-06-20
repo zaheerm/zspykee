@@ -166,7 +166,7 @@ class SpykeeClient(protocol.Protocol):
 
     def motorBack(self, motorSpeed, time=0.2):
         if motorSpeed < 128 and motorSpeed >= 0:
-            self.motorCommand(-motorSpeed, -motorSpeed, time)
+            self.motorCommand(128 + motorSpeed, 128 + motorSpeed, time)
 
     def motorLeft(self, time=0.2):
         self.motorCommand(0x96, 0x64, time)
