@@ -65,7 +65,7 @@ class SpykeeProducer(feedcomponent.ParseLaunchComponent):
         self.uiState.addKey('battery-level', 0)
 
     def get_pipeline_string(self, properties):
-        return "appsrc do-timestamp=true name=vsrc ! queue ! jpegdec ! videorate ! video/x-raw-yuv,framerate=25/1 ! @feeder:video@ appsrc do-timestamp=true name=asrc ! queue ! audiorate ! audio/x-raw-int,rate=16000,channels=1,width=16,depth=16 ! @feeder:audio@"
+        return "appsrc do-timestamp=true name=vsrc ! queue ! jpegdec ! videorate ! video/x-raw-yuv,framerate=15/1 ! @feeder:video@ appsrc do-timestamp=true name=asrc ! queue ! audiorate ! audio/x-raw-int,rate=16000,channels=1,width=16,depth=16 ! @feeder:audio@"
 
     def configure_pipeline(self, pipeline, properties):
         self._vsource = self.pipeline.get_by_name("vsrc")
