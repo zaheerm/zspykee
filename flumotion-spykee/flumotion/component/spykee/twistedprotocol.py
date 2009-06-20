@@ -12,6 +12,7 @@
 # See "LICENSE.GPL" in the source distribution for more information.
 
 # Headers in this file shall remain intact.
+import sys
 from socket import SOL_SOCKET, SO_BROADCAST
 
 from twisted.internet import protocol, reactor, task, defer
@@ -373,15 +374,6 @@ class SpykeeServer(protocol.Protocol):
         self.transport.write(str)
 
 if __name__ == "__main__":
-    def discovered(spykees):
-        if not spykees:
-            print "You poor thing, you need to buy yourself a Spykee at http://www.redstore.com/MECIMG001"
-        for name in spykees:
-            print "Spykee %s discovered at IP %s" % (name, spykees[name])
-        reactor.stop()
-    d = discover(2)
-    d.addCallback(discovered)
-    reactor.run()
     class a:
         cf = None
         def isDocked(self, docked):
@@ -406,9 +398,18 @@ if __name__ == "__main__":
 
         def batteryLevel(self, level):
             print "battery level: %d" % level
-    ao = a()
-    cf = SpykeeClientFactory("admin", "admin", ao)
-    ao.cf = cf
-    reactor.connectTCP("172.17.6.1", 9000, cf)
-    reactor.run()
 
+    def discovered(spykees):
+        if not spykees:
+            print "You poor thing, you need to buy yourself a Spykee at http://www.redstore.com/MECIMG001"
+        hostname = None
+        for name in spykees:
+            print "Spykee %s discovered at IP %s" % (name, spykees[name])
+            hostname = spykees[name]
+        ao = a()
+        cf = SpykeeClientFactory("admin", sys.argv[1], ao)
+        ao.cf = cf
+        reactor.connectTCP(hostname, 9000, cf)
+    d = discover(5)
+    d.addCallback(discovered)
+    reactor.run()
