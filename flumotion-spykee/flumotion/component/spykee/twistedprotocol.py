@@ -214,7 +214,8 @@ class SpykeeClient(protocol.Protocol):
     def logReceived(self):
         length = self.getCurrentCommandLength()
         self.log = self.buffer[5:5+length]
-        print self.log
+        if self.factory.app:
+            self.factory.app.logReceived(self.log)
 
     def visibleWifiReceived(self):
         length = self.getCurrentCommandLength()
@@ -398,6 +399,10 @@ if __name__ == "__main__":
 
         def batteryLevel(self, level):
             print "battery level: %d" % level
+
+        def logReceived(self, log):
+            print "Log: %r" % log
+
 
     def discovered(spykees):
         if not spykees:
