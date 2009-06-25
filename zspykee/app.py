@@ -12,6 +12,9 @@
 # See "LICENSE.GPL" in the source distribution for more information.
 
 # Headers in this file shall remain intact.
+import gobject
+gobject.threads_init()
+import gst
 import gtk
 
 from kiwi.ui.delegates import Delegate
@@ -23,6 +26,7 @@ gtk2reactor.install()
 from twisted.internet import reactor
 
 import twistedprotocol
+import gstreamer
 
 class SpykeeRobot:
     def __init__(self, name, ip):
@@ -90,7 +94,7 @@ class SpykeeControl(Delegate):
     widgets = ["quitbutton", "forwardbutton", "reversebutton", "leftbutton",
         "rightbutton", "dockbutton", "canceldockbutton", "undockbutton",
         "playsoundbutton", "manualmovebutton", "leftmotor", "rightmotor",
-        "docked", "all", "viewlogbutton"]
+        "docked", "all", "viewlogbutton", "picture"]
     gladefile = "spykee"
     toplevel_name = "control"
 
@@ -104,10 +108,48 @@ class SpykeeControl(Delegate):
         self.all.set_sensitive(False)
         self.cf = twistedprotocol.SpykeeClientFactory(self.username,
             self.password, self)
+        self.pipeline = None
         reactor.connectTCP(self.robot.ip, 9000, self.cf)
 
     def on_viewlogbutton__clicked(self, *args):
         self.cf.currentProtocol.getLog()
+
+    def on_forwardbutton__clicked(self, *args):
+        self.cf.currentProtocol.motorForward(50)
+
+    def on_reversebutton__clicked(self, *args):
+        self.cf.currentProtocol.motorBack(50)
+
+    def on_leftbutton__clicked(self, *args):
+        self.cf.currentProtocol.motorLeft()
+
+    def on_rightbutton__clicked(self, *args):
+        self.cf.currentProtocol.motorRight()
+
+    def on_manualmovebutton__clicked(self, *args):
+        left = self.leftmotor.get_value_as_int()
+        right = self.rightmotor.get_value_as_int()
+        if left < 0:
+            left += 128
+        if right < 0:
+            right += 128
+        self.cf.currentProtocol.motorCommand(left, right, 0.5)
+
+    def on_undockbutton__clicked(self, *args):
+        self.cf.currentProtocol.undock()
+        self.docked.set_markup("<b>Undocked</b>")
+        self.startStreaming()
+        
+    def on_dockbutton__clicked(self, *args):
+        self.cf.currentProtocol.dock()
+
+    def on_canceldockbutton__clicked(self, *args):
+        self.cf.currentProtocol.cancelDock()
+
+    def on_quitbutton__clicked(self, *args):
+        if self.pipeline:
+            self.pipeline.set_state(gst.STATE_NULL)
+        self.view.hide_and_quit()
 
     # protocol callbacks
     def isDocked(self, docked):
@@ -116,6 +158,7 @@ class SpykeeControl(Delegate):
             self.docked.set_markup("<b>Docked</b>")
         else:
             self.docked.set_markup("<b>Undocked</b>")
+            self.startStreaming()
     
     def connectionLost(self, reason):
         d = gtk.Dialog("Connection to spykee lost: reason %r" % reason, 
@@ -128,16 +171,47 @@ class SpykeeControl(Delegate):
         d.show()
     
     def videoFrame(self, frame):
-        pass
+        if self.src:
+            self.src.videoFrame(frame)
 
     def audioSample(self, sample):
-        pass
+        if self.src:
+            self.src.audioSample(sample)
 
     def batteryLevel(self, level):
         self.batterylevel.set_text("Battery: %d" % (level,))
 
     def logReceived(self, log):
         print "Log: %r" % log
+
+    # pipeline stuff
+    def startStreaming(self):
+        self.cf.currentProtocol.setSoundVolume(85)
+        self.cf.currentProtocol.activateVideo()
+        self.cf.currentProtocol.activateSound()
+        if self.pipeline:
+            self.pipeline.set_state(gst.STATE_NULL)
+            self.pipeline.get_state()
+        self.pipeline = gst.parse_launch("spykeesrc name=src  ! xvimagesink sync=false")
+        bus = self.pipeline.get_bus()
+        bus.enable_sync_message_emission()
+        bus.add_signal_watch()
+        bus.connect("sync-message::element", self.on_sync_message)
+        bus.connect("message", self.on_message)
+        self.src = self.pipeline.get_by_name("src")
+        self.src.set_property("connect", False)
+        self.pipeline.set_state(gst.STATE_PLAYING)
+
+    def on_sync_message(self, bus, message):
+        if message.structure is None:
+            return None
+        if message.structure.get_name() == 'prepare-xwindow-id':
+            gtk.gdk.display_get_default().sync()
+            message.src.set_xwindow_id(self.picture.window.xid)
+            message.src.set_property('force-aspect-ratio', True)
+
+    def on_message(self, bus, message):
+        pass
 
     
 delegate = Discoverer()

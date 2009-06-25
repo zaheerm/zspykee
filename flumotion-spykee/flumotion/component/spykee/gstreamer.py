@@ -19,7 +19,8 @@ gobject.threads_init()
 
 #from flumotion.component.spykee import twistedprotocol
 from twisted.internet import glib2reactor
-glib2reactor.install()
+if __name__ == "__main__":
+    glib2reactor.install()
 from twisted.internet import reactor
 
 import twistedprotocol
@@ -87,10 +88,11 @@ class SpykeeSource(gst.Bin):
         self._port = 9000
         self._username = "admin"
         self._password = "admin"
+        self._connect = True
         self.vcapsfilter.get_pad("src").add_event_probe(self.event_probe)
 
     def do_change_state(self, transition):
-        if transition == gst.STATE_CHANGE_READY_TO_PAUSED:
+        if transition == gst.STATE_CHANGE_READY_TO_PAUSED and self._connect:
             # connect to spykee
             self.cf = twistedprotocol.SpykeeClientFactory(self._username,
                 self._password, self)
@@ -109,6 +111,8 @@ class SpykeeSource(gst.Bin):
             self._username = value
         elif name == "password":
             self._password = value
+        elif name == "connect":
+            self._connect = value
 
     def videoFrame(self, frame):
         buf = gst.Buffer(frame)
@@ -136,7 +140,7 @@ class SpykeeSource(gst.Bin):
         self.cf.currentProtocol.activateSound()
 
     def event_probe(self, pad, event):
-        if event.type == gst.EVENT_NAVIGATION:
+        if event.type == gst.EVENT_NAVIGATION and self._connect:
             s = event.get_structure()
             if s.get_name() == "application/x-gst-navigation":
                 if "event" in s.keys():
