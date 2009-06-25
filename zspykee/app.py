@@ -36,15 +36,18 @@ class SpykeeListView(SlaveView):
     def __init__(self):
         self.robots = ObjectList([Column("name", "Name",),
                             Column("ip", "IP Address")])
-        d = twistedprotocol.discover(5)
+        d = twistedprotocol.discover(5, self)
         d.addCallback(self.discovered)
         SlaveView.__init__(self, toplevel=self.robots)
 
+    def spykeeFound(self, name, ip):
+        r = SpykeeRobot(name, ip)
+        self.robots.append(r)
+         
     def discovered(self, spykees):
-        if spykees:
-            for s in spykees:
-                r = SpykeeRobot(s, spykees[s])
-                self.robots.append(r)
+        if not spykees:
+            d = gtk.MessageDialog(message_format="No Spykee Robots found")
+            d.show()
 
 class Discoverer(Delegate):
     widgets = ["quitbutton", "connectbutton"]
@@ -94,7 +97,8 @@ class SpykeeControl(Delegate):
     widgets = ["quitbutton", "forwardbutton", "reversebutton", "leftbutton",
         "rightbutton", "dockbutton", "canceldockbutton", "undockbutton",
         "playsoundbutton", "manualmovebutton", "leftmotor", "rightmotor",
-        "docked", "all", "viewlogbutton", "picture"]
+        "docked", "all", "viewlogbutton", "picture", "leftarmledbutton",
+        "rightarmledbutton", "headlightbutton"]
     gladefile = "spykee"
     toplevel_name = "control"
 
@@ -130,9 +134,9 @@ class SpykeeControl(Delegate):
         left = self.leftmotor.get_value_as_int()
         right = self.rightmotor.get_value_as_int()
         if left < 0:
-            left += 128
+            left = 128 - left
         if right < 0:
-            right += 128
+            right = 128 - right
         self.cf.currentProtocol.motorCommand(left, right, 0.5)
 
     def on_undockbutton__clicked(self, *args):
@@ -151,6 +155,15 @@ class SpykeeControl(Delegate):
             self.pipeline.set_state(gst.STATE_NULL)
         self.view.hide_and_quit()
 
+    def on_leftarmledbutton__toggled(self, button):
+        self.cf.currentProtocol.light(2, button.get_active())
+
+    def on_rightarmledbutton__toggled(self, button):
+        self.cf.currentProtocol.light(1, button.get_active())
+
+    def on_headlightbutton__toggled(self, button):
+        self.cf.currentProtocol.light(0, button.get_active())
+
     # protocol callbacks
     def isDocked(self, docked):
         self.all.set_sensitive(True)
@@ -161,13 +174,13 @@ class SpykeeControl(Delegate):
             self.startStreaming()
     
     def connectionLost(self, reason):
-        d = gtk.Dialog("Connection to spykee lost: reason %r" % reason, 
-            None, 0, (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        d = gtk.MessageDialog(
+            message_format="Connection to spykee lost: reason %r" % reason) 
         d.show()
 
     def connectionFailed(self, reason):
-        d = gtk.Dialog("Connection to spykee failed: reason %r" % reason, 
-            None, 0, (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        d = gtk.MessageDialog(
+            message_format="Connection to spykee failed: reason %r" % reason) 
         d.show()
     
     def videoFrame(self, frame):
@@ -183,6 +196,9 @@ class SpykeeControl(Delegate):
 
     def logReceived(self, log):
         print "Log: %r" % log
+
+    def wifiReceived(self, wifi):
+        print "Wifi networks: %r" % (wifi,)
 
     # pipeline stuff
     def startStreaming(self):

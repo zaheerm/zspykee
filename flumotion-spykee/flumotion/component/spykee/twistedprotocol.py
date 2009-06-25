@@ -23,7 +23,7 @@ class SpykeeClient(protocol.Protocol):
     docked = False
     buffer = ""
     settings = {}
-    wifi = []
+    wifi = {}
     log = ""
 
     def connectionMade(self):
@@ -224,8 +224,9 @@ class SpykeeClient(protocol.Protocol):
         networks = string.split(wifi, ';')
         for n in networks:
             essid, encryption, strength = string.split(n, ":")
-            self.wifi.append((essid, encryption, int(strength)))
-        print repr(self.wifi)
+            self.wifi[essid] = (encryption, int(strength)))
+        if self.factory.app:
+            self.factory.app.wifiReceived(self.wifi)
 
     def audioToSpykeeOn(self):
         self.sendCommand(15, "\x03\x01")
@@ -316,10 +317,13 @@ class SpykeeDiscoveryProtocol(protocol.DatagramProtocol):
                 if spykee_id[0] == "uid":
                     if spykee_id[1] not in self.spykees:
                         self.spykees[spykee_id[1]] = addr[0]
+                        if self.app:
+                            self.app.spykeeFound(spykee_id[1], addr[0])
 
-def discover(wait=10):
+def discover(wait=10, app=None):
     returnd = defer.Deferred()
     discover_protocol = SpykeeDiscoveryProtocol()
+    discover_protocol.app = app
     listener = reactor.listenUDP(9000, discover_protocol)
     def stopDiscovery():
         listener.stopListening()
@@ -402,6 +406,9 @@ if __name__ == "__main__":
 
         def logReceived(self, log):
             print "Log: %r" % log
+
+        def wifiReceived(self, wifi):
+            print "Wifi networks: %r" % (wifi,)
 
 
     def discovered(spykees):
