@@ -224,7 +224,7 @@ class SpykeeClient(protocol.Protocol):
         networks = string.split(wifi, ';')
         for n in networks:
             essid, encryption, strength = string.split(n, ":")
-            self.wifi[essid] = (encryption, int(strength)))
+            self.wifi[essid] = (encryption, int(strength))
         if self.factory.app:
             self.factory.app.wifiReceived(self.wifi)
 
