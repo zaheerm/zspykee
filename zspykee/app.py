@@ -98,9 +98,10 @@ class SpykeeControl(Delegate):
         "rightbutton", "dockbutton", "canceldockbutton", "undockbutton",
         "playsoundbutton", "manualmovebutton", "leftmotor", "rightmotor",
         "docked", "all", "viewlogbutton", "picture", "leftarmledbutton",
-        "rightarmledbutton", "headlightbutton"]
+        "rightarmledbutton", "headlightbutton", "wificonfigbutton"]
     gladefile = "spykee"
     toplevel_name = "control"
+    wificonfig = None
 
     def __init__(self, robot, username, password):
         Delegate.__init__(self, delete_handler=self.quit_if_last)
@@ -164,6 +165,10 @@ class SpykeeControl(Delegate):
     def on_headlightbutton__toggled(self, button):
         self.cf.currentProtocol.light(0, button.get_active())
 
+    def on_wificonfigbutton_clicked(self, *args):
+        self.wificonfig = WifiConfig(self.cf)
+        self.wificonfig.show()
+
     # protocol callbacks
     def isDocked(self, docked):
         self.all.set_sensitive(True)
@@ -199,6 +204,8 @@ class SpykeeControl(Delegate):
 
     def wifiReceived(self, wifi):
         print "Wifi networks: %r" % (wifi,)
+        if self.wificonfig:
+            self.wificonfig.wifiReceived(wifi)
 
     # pipeline stuff
     def startStreaming(self):
@@ -229,7 +236,52 @@ class SpykeeControl(Delegate):
     def on_message(self, bus, message):
         pass
 
-    
+
+class SpykeeWifiNetwork:
+
+    def __init__(self, essid, encryption, strength):
+        self.essid = essid
+        self.encryption = encryption
+        self.strength = strength
+
+class SpykeeWifiListView(SlaveView):
+    def __init__(self, cf):
+        self.networks = ObjectList([Column("essid", "Network Name",),
+                            Column("encryption", "Security"),
+                            Column("strength", "Signal Strength")])
+        self.cf = cf
+        self.cf.getVisibleWifi()
+        SlaveView.__init__(self, toplevel=self.robots)
+
+    def wifiReceived(self, wifi):
+        for network in wifi:
+            n = SpykeeWifiNetwork(network, wifi[network][0], wifi[network][1])
+            self.networks.append(n)
+
+
+class WifiConfig(Delegate):
+    widgets = ["wifiokbutton", "wificancelbutton"]
+    gladefile = "spykee"
+    toplevel_name = "wificonfig"
+
+    def __init__(self, cf):
+        Delegate.__init__(self, delete_handler=self.quit_if_last)
+        self.networks = SpykeeWifiListView(cf)
+        self.attach_slave("wifi_placeholder", self.networks)
+        self.networks.show_all()
+        self.networks.focus_toplevel()
+
+    def on_cancelbutton__clicked(self, *args):
+        self.view.hide_and_quit()
+
+    def on_okbutton__clicked(self, *args):
+        network = self.networks.networks.get_selected()
+        if network:
+            print "Wifi network %s" % (network.essid,)
+
+    def wifiReceived(self, wifi):
+        self.networks.wifiReceived(wifi)
+
 delegate = Discoverer()
 delegate.show()
 reactor.run()
