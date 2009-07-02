@@ -165,7 +165,7 @@ class SpykeeControl(Delegate):
     def on_headlightbutton__toggled(self, button):
         self.cf.currentProtocol.light(0, button.get_active())
 
-    def on_wificonfigbutton_clicked(self, *args):
+    def on_wificonfigbutton__clicked(self, *args):
         self.wificonfig = WifiConfig(self.cf)
         self.wificonfig.show()
 
@@ -250,8 +250,8 @@ class SpykeeWifiListView(SlaveView):
                             Column("encryption", "Security"),
                             Column("strength", "Signal Strength")])
         self.cf = cf
-        self.cf.getVisibleWifi()
-        SlaveView.__init__(self, toplevel=self.robots)
+        self.cf.currentProtocol.getVisibleWifi()
+        SlaveView.__init__(self, toplevel=self.networks)
 
     def wifiReceived(self, wifi):
         for network in wifi:
@@ -274,7 +274,7 @@ class WifiConfig(Delegate):
     def on_cancelbutton__clicked(self, *args):
         self.view.hide_and_quit()
 
-    def on_okbutton__clicked(self, *args):
+    def on_wifiokbutton__clicked(self, *args):
         network = self.networks.networks.get_selected()
         if network:
             print "Wifi network %s" % (network.essid,)
