@@ -43,7 +43,7 @@ class SpykeeListView(SlaveView):
     def spykeeFound(self, name, ip):
         r = SpykeeRobot(name, ip)
         self.robots.append(r)
-         
+
     def discovered(self, spykees):
         if not spykees:
             d = gtk.MessageDialog(message_format="No Spykee Robots found")
@@ -108,7 +108,7 @@ class SpykeeControl(Delegate):
         self.robot = robot
         self.username = username
         self.password = password
-        print "connecting to %s (%s) with %s:%s" % (robot.name, 
+        print "connecting to %s (%s) with %s:%s" % (robot.name,
             robot.ip, username, password)
         self.all.set_sensitive(False)
         self.cf = twistedprotocol.SpykeeClientFactory(self.username,
@@ -144,7 +144,7 @@ class SpykeeControl(Delegate):
         self.cf.currentProtocol.undock()
         self.docked.set_markup("<b>Undocked</b>")
         self.startStreaming()
-        
+
     def on_dockbutton__clicked(self, *args):
         self.cf.currentProtocol.dock()
 
@@ -177,17 +177,17 @@ class SpykeeControl(Delegate):
         else:
             self.docked.set_markup("<b>Undocked</b>")
             self.startStreaming()
-    
+
     def connectionLost(self, reason):
         d = gtk.MessageDialog(
-            message_format="Connection to spykee lost: reason %r" % reason) 
+            message_format="Connection to spykee lost: reason %r" % reason)
         d.show()
 
     def connectionFailed(self, reason):
         d = gtk.MessageDialog(
-            message_format="Connection to spykee failed: reason %r" % reason) 
+            message_format="Connection to spykee failed: reason %r" % reason)
         d.show()
-    
+
     def videoFrame(self, frame):
         if self.src:
             self.src.videoFrame(frame)
