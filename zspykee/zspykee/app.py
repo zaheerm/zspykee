@@ -17,6 +17,7 @@ gobject.threads_init()
 import gst
 import gtk
 
+from kiwi.environ import environ
 from kiwi.ui.delegates import Delegate
 from kiwi.ui.objectlist import ObjectList, Column
 from kiwi.ui.views import SlaveView
@@ -288,4 +289,8 @@ def main():
     reactor.run()
 
 if __name__ == '__main__':
+    from pkg_resources import resource_filename
+    gladefile = resource_filename(__name__, 'spykee.glade')
+    dir = os.path.split(gladefile)[0]
+    environ.add_resource('glade', dir)
     main()
