@@ -282,6 +282,10 @@ class WifiConfig(Delegate):
     def wifiReceived(self, wifi):
         self.networks.wifiReceived(wifi)
 
-delegate = Discoverer()
-delegate.show()
-reactor.run()
+def main():
+    delegate = Discoverer()
+    delegate.show()
+    reactor.run()
+
+if __name__ == '__main__':
+    main()
