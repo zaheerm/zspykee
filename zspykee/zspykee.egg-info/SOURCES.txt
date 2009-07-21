@@ -1,0 +1,11 @@
+setup.py
+zspykee/__init__.py
+zspykee/app.py
+zspykee/gstreamer.py
+zspykee/twistedprotocol.py
+zspykee.egg-info/PKG-INFO
+zspykee.egg-info/SOURCES.txt
+zspykee.egg-info/dependency_links.txt
+zspykee.egg-info/entry_points.txt
+zspykee.egg-info/requires.txt
+zspykee.egg-info/top_level.txt
