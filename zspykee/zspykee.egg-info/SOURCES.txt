@@ -1,3 +1,4 @@
+ez_setup.py
 setup.py
 zspykee/__init__.py
 zspykee/app.py
